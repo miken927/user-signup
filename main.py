@@ -15,6 +15,11 @@
 # limitations under the License.
 #
 import webapp2
+#import re
+
+#USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+#PASSWORD_RE = re.compile(r"^.{3,20}$")
+#EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 
 # html boilerplate for the top of every page
 page_header = """
@@ -40,50 +45,66 @@ page_footer = """
 </html>
 """
 
-# initialize values
-username = ""
-email = ""
-username_error = ""
-password_error = ""
-email_error = ""
+def build_form(username, username_error, password_error, email, email_error):
+    signup_form = """
+        <form method="post">
+        <table>
+            <tr>
+                <td>Username:</td> <td><input type="text" name="username" value="{0}"/><span class="error">{1}</span></td>
+            </tr>
+            <tr>
+                <td>Password:</td> <td><input type="password" name="password"/><span class="error">{2}</span></td>
+            </tr>
+            <tr>
+                <td>Re-enter password:</td> <td><input type="password" name="verify_password"/></td>
+            <tr>
+                <td>E-mail (optional):</td> <td><input name="email" value="{3}"/><span class="error">{4}</span></td>
+            </tr>
+        </table>
+        <input type="submit" value="Sign Up!"/>
+        </form>
+    """.format(username, username_error, password_error, email, email_error)
 
-signup_form = """
-<form method="post">
-    <table>
-        <tr>
-            <td>Username:</td> <td><input type="text" name="username" value="{0}"/>{1}</td>
-        </tr>
-        <tr>
-            <td>Password:</td> <td><input type="password" name="password"/>{2}</td>
-        </tr>
-        <tr>
-            <td>Re-enter password:</td> <td><input type="password" name="verify_password"/></td>
-        <tr>
-            <td>E-mail:</td> <td><input type="email" name="email" value="{3}"/>{4}</td>
-        </tr>
-    </table>
-    <input type="submit" value="Sign Up!"/>
-</form>
-""".format(username, username_error, password_error, email, email_error)
+    return signup_form
 
-class welcome(webapp2.RequestHandler):
-    def post(self):
-        self.request.get("username")
-        self.response.write("Welcome " + username + "!")
+def check_input(field, input):
+    if len(input) > 20 or len(input) < 3:
+        return(" " + field + " must be between 3 and 20 characters!")
+    for char in input:
+        if char == " ":
+            return(" " + field + " cannot contain spaces!")
+    return("")
 
 
 class MainHandler(webapp2.RequestHandler):
 
     def get(self):
-        content = page_header + signup_form + page_footer
+        content = page_header + build_form("", "", "", "", "") + page_footer
         self.response.write(content)
 
     def post(self):
+
         username = self.request.get("username")
-        self.response.write("Hello " + username)
+        password = self.request.get("password")
+        verify_password = self.request.get("verify_password")
+        email = self.request.get("email")
+        email_error = ""
+
+        username_error = check_input("Username", username)
+
+        if password != verify_password:
+            password_error = " Passwords must match!"
+        else:
+            password_error = check_input("Password", password)
+
+        if username_error == "" and password_error == "" and email_error == "":
+            content = page_header + "<h1>Welcome " + username + "!</h1>"
+        else:
+            content = page_header + build_form(username, username_error, password_error, email, email_error) + page_footer
+
+        self.response.write(content)
 
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler),
-    ('/welcome', welcome)
+    ('/', MainHandler)
 ], debug=True)
