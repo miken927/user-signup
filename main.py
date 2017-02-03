@@ -15,11 +15,11 @@
 # limitations under the License.
 #
 import webapp2
-#import re
+import re
 
 #USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 #PASSWORD_RE = re.compile(r"^.{3,20}$")
-#EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
+EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 
 # html boilerplate for the top of every page
 page_header = """
@@ -58,7 +58,7 @@ def build_form(username, username_error, password_error, email, email_error):
             <tr>
                 <td>Re-enter password:</td> <td><input type="password" name="verify_password"/></td>
             <tr>
-                <td>E-mail (optional):</td> <td><input name="email" value="{3}"/><span class="error">{4}</span></td>
+                <td>E-mail (optional):</td> <td><input type="#email" name="email" value="{3}"/><span class="error">{4}</span></td>
             </tr>
         </table>
         <input type="submit" value="Sign Up!"/>
@@ -75,6 +75,12 @@ def check_input(field, input):
             return(" " + field + " cannot contain spaces!")
     return("")
 
+def check_email(email):
+    if email.find("@") < 1 or email.find("@") == email[-1]:
+        return(" Enter a valid email!")
+    else:
+        return("")
+
 
 class MainHandler(webapp2.RequestHandler):
 
@@ -88,7 +94,7 @@ class MainHandler(webapp2.RequestHandler):
         password = self.request.get("password")
         verify_password = self.request.get("verify_password")
         email = self.request.get("email")
-        email_error = ""
+        email_error = check_email(email)
 
         username_error = check_input("Username", username)
 
